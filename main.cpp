@@ -6,9 +6,12 @@
 #include <string>
 
 bool is_sign_number(const std::string &str, const size_t &i) {
-  return (str[i] >= '0' && str[i] <= '9') || str[i] == '-' || str[i] == '+' ||
-         str[i] == '*' || str[i] == '/' || str[i] == '^' || str[i] == 'e' ||
-         str[i] == 'p' || str[i] == '(' || str[i] == ')';
+  if (i >= 0 && i < str.size()) {
+    return (str[i] >= '0' && str[i] <= '9') || str[i] == '-' || str[i] == '+' ||
+           str[i] == '*' || str[i] == '/' || str[i] == '^' || str[i] == 'e' ||
+           str[i] == 'p' || str[i] == '(' || str[i] == ')';
+  }
+  return false;
 }
 
 bool is_three(const std::string &str, size_t &i) {
@@ -38,6 +41,11 @@ bool is_real(const std::string &str, const size_t &i) {
     }
   }
   return false;
+}
+
+bool is_avalaible_name(const std::string &str) {
+  return str != "sin" && str != "cos" && str != "tan" && str != "cot" &&
+         str != "sqr" && str != "exp" && str != "e" && str != "p";
 }
 
 bool is_int(const std::string &str) {
@@ -179,34 +187,29 @@ std::set<std::string> get_var_set(const std::string &str) {
   for (size_t i = 0; i < str.size(); ++i) {
     std::string var;
     size_t v_begin = 0, v_end = 0;
-    if (str[i] != '+' && str[i] != '-' && str[i] != '*' && str[i] != '/' &&
-        str[i] != '^' && str[i] != 'p' && str[i] != 'e' &&
-        !(str[i] >= '0' && str[i] <= '9')) {
+    if (!is_sign_number(str, i)) {
       var = str.substr(i, 1);
       v_begin = i;
       for (size_t j = i + 1; j < str.size(); ++j) {
-        if (str[i] != '+' && str[i] != '-' && str[i] != '*' && str[i] != '/' &&
-            str[i] != '^' && str[i] != 'p' && str[i] != 'e' &&
-            !(str[i] >= '0' && str[i] <= '9')) {
+        if (!is_sign_number(str, j)) {
           var += str[j];
           v_end = j;
         } else
           break;
       }
     }
-    if (var != "sin" && var != "cos" && var != "tan" && var != "cot" &&
-        var != "sqr" && var != "exp" &&
-        (v_begin == 0 ||
-         (str.at(v_begin - 1) == '+' || str.at(v_begin - 1) == '-' ||
-          str.at(v_begin - 1) == '*' || str.at(v_begin - 1) == '/' ||
-          str.at(v_begin - 1) == '^')))
+    if (is_avalaible_name(var) &&
+        (v_begin == 0 || is_sign_number(str, v_begin - 1)) &&
+        (v_end == str.size() - 1 || is_sign_number(str, v_end + 1))) {
       result.insert(var);
+      i += v_end + 1;
+    }
   }
   return result;
 }
 
 int main() {
-  std::string str = "10+5+tan(10)^(cos(5))-(10)+x";
-  std::cout << is_normal(str);
+  std::string str = "ghcx+oxy";
+  get_var_set(str);
   return 0;
 }
