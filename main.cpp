@@ -4,26 +4,6 @@
 #include <iostream>
 #include <string>
 
-size_t find_left(const std::string &str) {
-  int result = 0;
-  for (char c : str) {
-    if (c == '(')
-      ++result;
-  }
-  return result;
-}
-
-size_t find_right(const std::string &str) {
-  int result = 0;
-  for (char c : str) {
-    if (c == '(')
-      ++result;
-  }
-  return result;
-}
-
-void solve_bracket(const std::string &str) {}
-
 bool is_int(const std::string &str) {
   for (char c : str) {
     if (c == '.')
@@ -32,7 +12,7 @@ bool is_int(const std::string &str) {
   return true;
 }
 
-bool is_correct_scobes(const std::string &str) {
+bool is_correct_bracket(const std::string &str) {
   int tmp = 0;
   for (size_t i = 0; i < str.size(); ++i) {
     if (i < str.size() - 1) {
@@ -78,7 +58,7 @@ bool is_normal(const std::string &str) {
   size_t size = str.size();
   if (size == 0)
     return false;
-  if (!(is_correct_scobes(str)))
+  if (!(is_correct_bracket(str)))
     return false;
   if (size == 1) {
     return str[0] >= '0' && str[0] <= '9';
@@ -122,14 +102,23 @@ bool is_normal(const std::string &str) {
   }
 }
 
-void solve_trigonometry(const std::string &str) {
-  size_t size = str.size();
-  if (str[0] == 's') {
-    std::string tmp = str.substr(3, size - 1);
+int count_operations(const std::string str) {
+  int result = 0;
+  for (size_t i = 0; i < str.size(); ++i) {
+    if (str[i] == '+' || str[i] == '-' || str[i] == '*' || str[i] == '/')
+      ++result;
+    else {
+      if (str.size() - i >= 3) {
+        std::string tmp = str.substr(i, 3);
+        if (tmp == "sin" || tmp == "cos" || tmp == "tan" || tmp == "cot" ||
+            tmp == "sqr" || tmp == "exp")
+          ++result;
+      }
+    }
   }
+  return result;
 }
 
 int main() {
-  std::cout << is_normal("+-");
-  return 0;
-}
+  std::cout<<count_operations("10*6*tan(10)+sqr(6+9)");
+  return 0; }
