@@ -5,6 +5,41 @@
 #include <set>
 #include <string>
 
+bool is_sign_number(const std::string &str, const size_t &i) {
+  return (str[i] >= '0' && str[i] <= '9') || str[i] == '-' || str[i] == '+' ||
+         str[i] == '*' || str[i] == '/' || str[i] == '^' || str[i] == 'e' ||
+         str[i] == 'p' || str[i] == '(' || str[i] == ')';
+}
+
+bool is_three(const std::string &str, size_t &i) {
+  if (str.size() - i >= 4) {
+    std::string tmp = str.substr(i, 3);
+    if ((tmp == "sin" || tmp == "cos" || tmp == "tan" || tmp == "cot" ||
+         tmp == "exp" || tmp == "sqr") &&
+        str[i + 3] == '(') {
+      i += 2;
+      return true;
+    } else
+      return false;
+  } else
+    return false;
+}
+
+bool is_real(const std::string &str, const size_t &i) {
+  if (str[i] == '.') {
+    for (size_t j = i + 1; j < str.size(); ++j) {
+      if (!(str[j] >= '0' && str[j] <= '9') && j == i + 1)
+        return false;
+      if (str[j] == ')' || str[j] == '*' || str[j] == '-' || str[j] == '+' ||
+          str[j] == '/' || j == str.size() - 1)
+        return true;
+      if (!(str[j] >= '0' && str[j] <= '9'))
+        return false;
+    }
+  }
+  return false;
+}
+
 bool is_int(const std::string &str) {
   for (char c : str) {
     if (c == '.')
@@ -55,7 +90,7 @@ bool is_correct_bracket(const std::string &str) {
   return tmp == 0;
 }
 
-bool is_correct_operations(const std::string str) {
+bool is_correct_operations(const std::string &str) {
   size_t size = str.size();
   if (str[0] == '+' || str[0] == '-' || str[0] == '*' || str[0] == '/' ||
       str[0] == '^')
@@ -114,36 +149,7 @@ bool is_normal(const std::string &str) {
             (str[1] >= '0' && str[1] <= '9'));
   if (size >= 3) {
     for (size_t i = 0; i < size; ++i) {
-      bool is_one = false, is_three = false, is_dot = false;
-      if ((str[i] >= '0' && str[i] <= '9') || str[i] == '-' || str[i] == '+' ||
-          str[i] == '*' || str[i] == '/' || str[i] == '^' || str[i] == 'e' ||
-          str[i] == 'p' || str[i] == '(' || str[i] == ')')
-        is_one = true;
-      if (size - i >= 4) {
-        std::string tmp = str.substr(i, 3);
-        if ((tmp == "sin" || tmp == "cos" || tmp == "tan" || tmp == "cot" ||
-             tmp == "exp" || tmp == "sqrt") &&
-            str[i + 3] == '(') {
-          is_three = true;
-          i += 2;
-        }
-      }
-      if (str[i] == '.') {
-        for (size_t j = i + 1; j < size; ++j) {
-          if (!(str[j] >= '0' && str[j] <= '9') && j == i + 1)
-            return false;
-          if (str[j] == ')' || str[j] == '*' || str[j] == '-' ||
-              str[j] == '+' || str[j] == '/' || j == size - 1) {
-            is_dot = true;
-            break;
-          }
-          if (!(str[j] >= '0' && str[j] <= '9'))
-            return false;
-        }
-      }
-      if (str[i] == '(') {
-      }
-      if (!is_one && !is_three && !is_dot)
+      if (!is_sign_number(str, i) && !(is_three(str, i) && !(is_real(str, i))))
         return false;
     }
     return true;
@@ -168,7 +174,39 @@ int count_operations(const std::string &str) {
   return result;
 }
 
+std::set<std::string> get_var_set(const std::string &str) {
+  std::set<std::string> result;
+  for (size_t i = 0; i < str.size(); ++i) {
+    std::string var;
+    size_t v_begin = 0, v_end = 0;
+    if (str[i] != '+' && str[i] != '-' && str[i] != '*' && str[i] != '/' &&
+        str[i] != '^' && str[i] != 'p' && str[i] != 'e' &&
+        !(str[i] >= '0' && str[i] <= '9')) {
+      var = str.substr(i, 1);
+      v_begin = i;
+      for (size_t j = i + 1; j < str.size(); ++j) {
+        if (str[i] != '+' && str[i] != '-' && str[i] != '*' && str[i] != '/' &&
+            str[i] != '^' && str[i] != 'p' && str[i] != 'e' &&
+            !(str[i] >= '0' && str[i] <= '9')) {
+          var += str[j];
+          v_end = j;
+        } else
+          break;
+      }
+    }
+    if (var != "sin" && var != "cos" && var != "tan" && var != "cot" &&
+        var != "sqr" && var != "exp" &&
+        (v_begin == 0 ||
+         (str.at(v_begin - 1) == '+' || str.at(v_begin - 1) == '-' ||
+          str.at(v_begin - 1) == '*' || str.at(v_begin - 1) == '/' ||
+          str.at(v_begin - 1) == '^')))
+      result.insert(var);
+  }
+  return result;
+}
+
 int main() {
-  std::cout << is_normal("(cos(9)^(sin(10)))-1*78");
+  std::string str = "10+5+tan(10)^(cos(5))-(10)+x";
+  std::cout << is_normal(str);
   return 0;
 }
