@@ -217,13 +217,19 @@ void setup_vars(std::string &str) {
     size_t pos = 0;
     std::cout << "enter value of " << var << std::endl;
     std::cin >> val;
-    pos = str.find(var);
-    str.replace(pos, var.size(), val);
+    while (str.find(var, pos) != -1) {
+      pos = str.find(var, pos);
+      if ((is_sign_number(str, pos - 1) || pos == 0) &&
+          (is_sign_number(str, pos + var.size()) ||
+           pos + var.size() == str.size()))
+        str.replace(pos, var.size(), val);
+      ++pos;
+    }
   }
 }
 
 int main() {
-  std::string str = "hkfsd+10-15*tan(i)-y^(ui)";
+  std::string str = "x+x+xx";
   setup_vars(str);
   std::cout << str << std::endl << is_normal(str);
   return 0;
