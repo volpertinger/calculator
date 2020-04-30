@@ -190,6 +190,7 @@ std::set<std::string> get_var_set(const std::string &str) {
     if (!is_sign_number(str, i)) {
       var = str.substr(i, 1);
       v_begin = i;
+      v_end = i;
       for (size_t j = i + 1; j < str.size(); ++j) {
         if (!is_sign_number(str, j)) {
           var += str[j];
@@ -202,14 +203,28 @@ std::set<std::string> get_var_set(const std::string &str) {
         (v_begin == 0 || is_sign_number(str, v_begin - 1)) &&
         (v_end == str.size() - 1 || is_sign_number(str, v_end + 1))) {
       result.insert(var);
-      i += v_end + 1;
+      i = v_end + 1;
     }
   }
   return result;
 }
 
+void setup_vars(std::string &str) {
+  std::set<std::string> list = get_var_set(str);
+  list.erase("");
+  for (const auto &var : list) {
+    std::string val;
+    size_t pos = 0;
+    std::cout << "enter value of " << var << std::endl;
+    std::cin >> val;
+    pos = str.find(var);
+    str.replace(pos, var.size(), val);
+  }
+}
+
 int main() {
-  std::string str = "ghcx+oxy";
-  get_var_set(str);
+  std::string str = "hkfsd+10-15*tan(i)-y^(ui)";
+  setup_vars(str);
+  std::cout << str << std::endl << is_normal(str);
   return 0;
 }
