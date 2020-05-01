@@ -5,6 +5,13 @@
 #include <set>
 #include <string>
 
+bool is_number(const std::string &str, const size_t &i) {
+  if (i >= 0 && i < str.size()) {
+    return ((str[i] >= '0' && str[i] <= '9') || str[i] == '.');
+  }
+  return false;
+}
+
 bool is_sign_number(const std::string &str, const size_t &i) {
   if (i >= 0 && i < str.size()) {
     return (str[i] >= '0' && str[i] <= '9') || str[i] == '-' || str[i] == '+' ||
@@ -43,7 +50,7 @@ bool is_real(const std::string &str, const size_t &i) {
   return false;
 }
 
-bool is_avalaible_name(const std::string &str) {
+bool is_available_name(const std::string &str) {
   return str != "sin" && str != "cos" && str != "tan" && str != "cot" &&
          str != "sqr" && str != "exp" && str != "e" && str != "p";
 }
@@ -199,7 +206,7 @@ std::set<std::string> get_var_set(const std::string &str) {
           break;
       }
     }
-    if (is_avalaible_name(var) &&
+    if (is_available_name(var) &&
         (v_begin == 0 || is_sign_number(str, v_begin - 1)) &&
         (v_end == str.size() - 1 || is_sign_number(str, v_end + 1))) {
       result.insert(var);
@@ -228,9 +235,23 @@ void setup_vars(std::string &str) {
   }
 }
 
+double get_number(const std::string &str, const size_t &pos) {
+  std::string result;
+  for (size_t i = pos; i < str.size(); ++i) {
+    if (is_number(str, i))
+      result += str[i];
+    else
+      break;
+  }
+  return stod(result);
+}
+
+void solve_simple_operation(std::string &str, const size_t &begin) {}
+
+void solve_simple_bracket(std::string &str) {}
+
 int main() {
-  std::string str = "x+x+xx";
-  setup_vars(str);
-  std::cout << str << std::endl << is_normal(str);
+  std::string str = "1*12.32+12.45";
+  std::cout << get_number(str, 2);
   return 0;
 }
