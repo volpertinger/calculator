@@ -179,9 +179,9 @@ bool is_normal(const std::string &str) {
   }
 }
 
-int count_operations(const std::string &str) {
+int count_operations(const std::string &str, const int pos) {
   int result = 0;
-  for (size_t i = 0; i < str.size(); ++i) {
+  for (size_t i = pos; i < str.size() && str[i] != ')'; ++i) {
     if (str[i] == '+' || str[i] == '-' || str[i] == '*' || str[i] == '/' ||
         str[i] == '^')
       ++result;
@@ -282,6 +282,20 @@ int find_end(const std::string &str, int pos) {
   return pos;
 }
 
+int find_hight_priority(const std::string &str) {
+  int max_level = 0, level = 0, result = 0;
+  for (int i = 0; i < str.size(); ++i) {
+    if (str[i] == '(') {
+      ++level;
+      if (level > max_level && count_operations(str, i) > 0)
+        result = i;
+    }
+    if (str[i] == ')')
+      --level;
+  }
+  return result;
+}
+
 double get_number(const std::string &str, int &pos) {
   std::string result;
   for (size_t i = pos; i < str.size(); ++i) {
@@ -316,7 +330,12 @@ std::string get_operation(const std::string &str, int &pos) {
   return result;
 }
 
-void solve_simple(std::string &str, const int &pos) {
+void solve_simple(std::string &str, const int &pos_init) {
+  int pos = pos_init;
+  if (str.at(pos - 1) == '(') {
+    str.erase(pos - 1, 1);
+    --pos;
+  }
   int pos_end = pos;
   double lhs = 0, rhs = 0;
   if (is_number(str, pos_end) || str[pos_end] == '(' || str[pos_end] == ')')
@@ -592,11 +611,8 @@ void solve_simple_bracket(std::string &str, int &pos) {
 }
 
 int main() {
-  std::string str = "";
+  std::string str = "(1+sin(0))";
   int i = 0;
-  setup_vars(str);
-  std::cout << str << std::endl;
-  std::cout << is_normal(str) << std::endl;
   solve_simple_bracket(str, i);
   std::cout << str;
   return 0;
