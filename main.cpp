@@ -22,9 +22,9 @@ bool is_simple_operation(const std::string &str, const size_t &i) {
 
 bool is_sign_number(const std::string &str, const size_t &i) {
   if (i >= 0 && i < str.size()) {
-    return (str[i] >= '0' && str[i] <= '9') || str[i] == '-' || str[i] == '+' ||
-           str[i] == '*' || str[i] == '/' || str[i] == '^' || str[i] == 'e' ||
-           str[i] == 'p' || str[i] == '(' || str[i] == ')';
+    return ((str[i] >= '0' && str[i] <= '9') || str[i] == '-' ||
+            str[i] == '+' || str[i] == '*' || str[i] == '/' || str[i] == '^' ||
+            str[i] == '(' || str[i] == ')' || str[i] == '.');
   }
   return false;
 }
@@ -35,7 +35,7 @@ bool is_three(const std::string &str, size_t &i) {
     if ((tmp == "sin" || tmp == "cos" || tmp == "tan" || tmp == "cot" ||
          tmp == "exp" || tmp == "sqr") &&
         str[i + 3] == '(') {
-      i += 2;
+      i += 3;
       return true;
     } else
       return false;
@@ -224,7 +224,30 @@ std::set<std::string> get_var_set(const std::string &str) {
   return result;
 }
 
+void setup_consts(std::string &str) {
+  std::set<std::string> list;
+  list.emplace("e");
+  list.emplace("p");
+  for (const auto &var : list) {
+    std::string val;
+    size_t pos = 0;
+    if (var == "e")
+      val = "2.71828182846";
+    if (var == "p")
+      val = "3.14159265358";
+    while (str.find(var, pos) != -1) {
+      pos = str.find(var, pos);
+      if ((is_sign_number(str, pos - 1) || pos == 0) &&
+          (is_sign_number(str, pos + var.size()) ||
+           pos + var.size() == str.size()))
+        str.replace(pos, var.size(), val);
+      ++pos;
+    }
+  }
+}
+
 void setup_vars(std::string &str) {
+  setup_consts(str);
   std::set<std::string> list = get_var_set(str);
   list.erase("");
   for (const auto &var : list) {
@@ -277,7 +300,7 @@ std::string get_operation(const std::string &str, int &pos) {
   return result;
 }
 
-void solve_simple_operation(std::string &str, const int &pos) {
+void solve_first_priority(std::string &str, const int &pos) {
   int pos_end = pos;
   double lhs = 0, rhs = 0;
   if (is_number(str, pos_end) || str[pos_end] == '(' || str[pos_end] == ')')
@@ -285,18 +308,6 @@ void solve_simple_operation(std::string &str, const int &pos) {
   std::string operation = get_operation(str, pos_end);
   if (is_number(str, pos_end) || str[pos_end] == '(' || str[pos_end] == ')')
     rhs = get_number(str, pos_end);
-  if (operation == "+") {
-    double result = lhs + rhs;
-    std::string result_str = std::to_string(result);
-    str.replace(pos, pos_end - pos, result_str);
-    return;
-  }
-  if (operation == "-") {
-    double result = lhs - rhs;
-    std::string result_str = std::to_string(result);
-    str.replace(pos, pos_end - pos, result_str);
-    return;
-  }
   if (operation == "*") {
     double result = lhs * rhs;
     std::string result_str = std::to_string(result);
@@ -319,6 +330,38 @@ void solve_simple_operation(std::string &str, const int &pos) {
     str.replace(pos, pos_end - pos, result_str);
     return;
   }
+}
+
+void solve_second_priority(std::string &str, const int &pos) {
+  int pos_end = pos;
+  double lhs = 0, rhs = 0;
+  if (is_number(str, pos_end) || str[pos_end] == '(' || str[pos_end] == ')')
+    lhs = get_number(str, pos_end);
+  std::string operation = get_operation(str, pos_end);
+  if (is_number(str, pos_end) || str[pos_end] == '(' || str[pos_end] == ')')
+    rhs = get_number(str, pos_end);
+  if (operation == "+") {
+    double result = lhs + rhs;
+    std::string result_str = std::to_string(result);
+    str.replace(pos, pos_end - pos, result_str);
+    return;
+  }
+  if (operation == "-") {
+    double result = lhs - rhs;
+    std::string result_str = std::to_string(result);
+    str.replace(pos, pos_end - pos, result_str);
+    return;
+  }
+}
+
+void solve_third_priority(std::string &str, const int &pos) {
+  int pos_end = pos;
+  double lhs = 0, rhs = 0;
+  if (is_number(str, pos_end) || str[pos_end] == '(' || str[pos_end] == ')')
+    lhs = get_number(str, pos_end);
+  std::string operation = get_operation(str, pos_end);
+  if (is_number(str, pos_end) || str[pos_end] == '(' || str[pos_end] == ')')
+    rhs = get_number(str, pos_end);
   if (operation == "sin") {
     double result = sin(rhs);
     std::string result_str = std::to_string(result);
@@ -366,13 +409,20 @@ void solve_simple_operation(std::string &str, const int &pos) {
   }
 }
 
-void solve_simple_bracket(std::string &str) {}
+void solve_simple_bracket(std::string &str, int &pos) {
+  int count = 0;
+  for (size_t i = 0; str[i] != ')' && i < str.size(); ++i) {
+    if (str[i] == '*' || str[i] == '/')
+      ++count;
+  }
+}
 
 int main() {
-  std::string str = "exp(+1)";
+  std::string str = "exp(e)*ep*p";
   int i = 0;
-  std::cout << is_normal(str) << std::endl;
-  solve_simple_operation(str, i);
+  // std::cout << is_normal(str) << std::endl;
+  // solve_first_priority(str, i);
+  setup_vars(str);
   std::cout << str;
   return 0;
 }
