@@ -267,7 +267,7 @@ void setup_vars(std::string &str) {
   }
 }
 
-int find_end(const std::string &str, int pos) {
+int find_end_trig(const std::string &str, int pos) {
   int level = 0;
   for (; str[pos] != '('; ++pos)
     ;
@@ -279,6 +279,15 @@ int find_end(const std::string &str, int pos) {
     if (str[pos] == ')')
       --level;
   }
+  return pos;
+}
+
+int find_end_num(const std::string &str, int pos) {
+  for (; !is_simple_operation(str, pos); ++pos)
+    ;
+  ++pos;
+  for (; is_number(str, pos); ++pos)
+    ;
   return pos;
 }
 
@@ -330,12 +339,7 @@ std::string get_operation(const std::string &str, int &pos) {
   return result;
 }
 
-void solve_simple(std::string &str, const int &pos_init) {
-  int pos = pos_init;
-  if (str.at(pos - 1) == '(') {
-    str.erase(pos - 1, 1);
-    --pos;
-  }
+void solve_simple(std::string &str, const int &pos) {
   int pos_end = pos;
   double lhs = 0, rhs = 0;
   if (is_number(str, pos_end) || str[pos_end] == '(' || str[pos_end] == ')')
@@ -346,6 +350,7 @@ void solve_simple(std::string &str, const int &pos_init) {
   if (operation == "*") {
     double result = lhs * rhs;
     std::string result_str = std::to_string(result);
+
     str.replace(pos, pos_end - pos, result_str);
     return;
   }
@@ -368,6 +373,7 @@ void solve_simple(std::string &str, const int &pos_init) {
   if (operation == "+") {
     double result = lhs + rhs;
     std::string result_str = std::to_string(result);
+    pos_end = find_end_num(str, pos);
     str.replace(pos, pos_end - pos, result_str);
     return;
   }
@@ -380,14 +386,14 @@ void solve_simple(std::string &str, const int &pos_init) {
   if (operation == "sin") {
     double result = sin(rhs);
     std::string result_str = std::to_string(result);
-    pos_end = find_end(str, pos);
+    pos_end = find_end_trig(str, pos);
     str.replace(pos, pos_end - pos, result_str);
     return;
   }
   if (operation == "cos") {
     double result = cos(rhs);
     std::string result_str = std::to_string(result);
-    pos_end = find_end(str, pos);
+    pos_end = find_end_trig(str, pos);
     str.replace(pos, pos_end - pos, result_str);
     return;
   }
@@ -395,7 +401,7 @@ void solve_simple(std::string &str, const int &pos_init) {
   if (operation == "tan") {
     double result = tan(rhs);
     std::string result_str = std::to_string(result);
-    pos_end = find_end(str, pos);
+    pos_end = find_end_trig(str, pos);
     str.replace(pos, pos_end - pos, result_str);
     return;
   }
@@ -403,7 +409,7 @@ void solve_simple(std::string &str, const int &pos_init) {
   if (operation == "cot") {
     double result = 1 / tan(rhs);
     std::string result_str = std::to_string(result);
-    pos_end = find_end(str, pos);
+    pos_end = find_end_trig(str, pos);
     str.replace(pos, pos_end - pos, result_str);
     return;
   }
@@ -411,7 +417,7 @@ void solve_simple(std::string &str, const int &pos_init) {
   if (operation == "sqr") {
     double result = sqrt(rhs);
     std::string result_str = std::to_string(result);
-    pos_end = find_end(str, pos);
+    pos_end = find_end_trig(str, pos);
     str.replace(pos, pos_end - pos, result_str);
     return;
   }
@@ -420,7 +426,7 @@ void solve_simple(std::string &str, const int &pos_init) {
     if (rhs >= 0) {
       double result = exp(rhs);
       std::string result_str = std::to_string(result);
-      pos_end = find_end(str, pos);
+      pos_end = find_end_trig(str, pos);
       str.replace(pos, pos_end - pos, result_str);
     } else {
       std::cout << "wrong exp arg" << std::endl;
@@ -611,9 +617,10 @@ void solve_simple_bracket(std::string &str, int &pos) {
 }
 
 int main() {
-  std::string str = "(1+sin(0))";
+  std::string str = "(3)+908";
   int i = 0;
   solve_simple_bracket(str, i);
   std::cout << str;
+  // std::cout << find_end_num(str,1);
   return 0;
 }
