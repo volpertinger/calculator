@@ -5,14 +5,14 @@
 #include <set>
 #include <string>
 
-bool is_number(const std::string &str, const size_t &i) {
+bool is_number(const std::string &str, const int &i) {
   if (i >= 0 && i < str.size()) {
     return ((str[i] >= '0' && str[i] <= '9') || str[i] == '.');
   }
   return false;
 }
 
-bool is_simple_operation(const std::string &str, const size_t &i) {
+bool is_simple_operation(const std::string &str, const int &i) {
   if (i >= 0 && i < str.size()) {
     return (str[i] == '+' || str[i] == '-' || str[i] == '*' || str[i] == '/' ||
             str[i] == '^');
@@ -20,7 +20,7 @@ bool is_simple_operation(const std::string &str, const size_t &i) {
   return false;
 }
 
-bool is_sign_number(const std::string &str, const size_t &i) {
+bool is_sign_number(const std::string &str, const int &i) {
   if (i >= 0 && i < str.size()) {
     return ((str[i] >= '0' && str[i] <= '9') || str[i] == '-' ||
             str[i] == '+' || str[i] == '*' || str[i] == '/' || str[i] == '^' ||
@@ -29,7 +29,7 @@ bool is_sign_number(const std::string &str, const size_t &i) {
   return false;
 }
 
-bool is_three(const std::string &str, size_t &i) {
+bool is_three(const std::string &str, int &i) {
   if (str.size() - i >= 4) {
     std::string tmp = str.substr(i, 3);
     if ((tmp == "sin" || tmp == "cos" || tmp == "tan" || tmp == "cot" ||
@@ -43,7 +43,7 @@ bool is_three(const std::string &str, size_t &i) {
     return false;
 }
 
-bool is_real(const std::string &str, const size_t &i) {
+bool is_real(const std::string &str, const int &i) {
   if (str[i] == '.') {
     for (size_t j = i + 1; j < str.size(); ++j) {
       if (!(str[j] >= '0' && str[j] <= '9') && j == i + 1)
@@ -171,7 +171,7 @@ bool is_normal(const std::string &str) {
            ((str[0] >= '0' && str[0] <= '9') &&
             (str[1] >= '0' && str[1] <= '9'));
   if (size >= 3) {
-    for (size_t i = 0; i < size; ++i) {
+    for (int i = 0; i < size; ++i) {
       if (!is_sign_number(str, i) && !(is_three(str, i) && !(is_real(str, i))))
         return false;
     }
@@ -216,7 +216,8 @@ std::set<std::string> get_var_set(const std::string &str) {
     }
     if (is_available_name(var) &&
         (v_begin == 0 || is_sign_number(str, v_begin - 1)) &&
-        (v_end == str.size() - 1 || is_sign_number(str, v_end + 1))) {
+        (v_end == str.size() - 1 || is_sign_number(str, v_end + 1)) &&
+        !var.empty()) {
       result.insert(var);
       i = v_end + 1;
     }
@@ -285,7 +286,7 @@ double get_number(const std::string &str, int &pos) {
 
 std::string get_operation(const std::string &str, int &pos) {
   std::string result;
-  for (size_t i = pos; pos < str.size(); ++i) {
+  for (int i = pos; pos < str.size(); ++i) {
     if (is_simple_operation(str, i)) {
       result = str.substr(i, 1);
       ++pos;
@@ -544,18 +545,38 @@ void solve_third_priority(std::string &str, const int &pos) {
 }
 
 void solve_simple_bracket(std::string &str, int &pos) {
-  int count = 0;
+  int begin = pos;
+  for (int i = 0; str[i] != ')' && i < str.size(); ++i) {
+    if (is_three(str, i)) {
+      solve_simple(str, i - 3);
+      i = 0;
+    }
+  }
   for (size_t i = 0; str[i] != ')' && i < str.size(); ++i) {
-    if (str[i] == '*' || str[i] == '/')
-      ++count;
+    if (str[i] == '*' || str[i] == '/' || str[i] == '^') {
+      for (begin = i - 1; is_number(str, begin); --begin)
+        ;
+      solve_simple(str, begin + 1);
+      i = 0;
+    }
+  }
+  for (size_t i = 0; str[i] != ')' && i < str.size(); ++i) {
+    if (str[i] == '+' || str[i] == '-') {
+      for (begin = i - 1; is_number(str, begin); --begin)
+        ;
+      solve_simple(str, begin + 1);
+      i = 0;
+    }
   }
 }
 
 int main() {
-  std::string str = "cos(0)";
+  std::string str = "67+789+x";
   int i = 0;
+  setup_vars(str);
+  std::cout << str << std::endl;
   std::cout << is_normal(str) << std::endl;
-  solve_simple(str, i);
+  solve_simple_bracket(str, i);
   std::cout << str;
   return 0;
 }
