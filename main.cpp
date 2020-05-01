@@ -12,6 +12,14 @@ bool is_number(const std::string &str, const size_t &i) {
   return false;
 }
 
+bool is_simple_operation(const std::string &str, const size_t &i) {
+  if (i >= 0 && i < str.size()) {
+    return (str[i] == '+' || str[i] == '-' || str[i] == '*' || str[i] == '/' ||
+            str[i] == '^');
+  }
+  return false;
+}
+
 bool is_sign_number(const std::string &str, const size_t &i) {
   if (i >= 0 && i < str.size()) {
     return (str[i] >= '0' && str[i] <= '9') || str[i] == '-' || str[i] == '+' ||
@@ -235,23 +243,136 @@ void setup_vars(std::string &str) {
   }
 }
 
-double get_number(const std::string &str, const size_t &pos) {
+double get_number(const std::string &str, int &pos) {
   std::string result;
   for (size_t i = pos; i < str.size(); ++i) {
-    if (is_number(str, i))
+    if ((is_number(str, i) || str[i] == '(' || str[i] == ')') ||
+        ((str[i] == '+' || str[i] == '-') && (!is_number(str, i - 1))))
       result += str[i];
     else
       break;
   }
+  pos += result.size();
+  if (result[0] == '(')
+    result = result.substr(1, result.size() - 1);
+  if (result[result.size() - 1] == ')')
+    result = result.substr(0, result.size() - 1);
   return stod(result);
 }
 
-void solve_simple_operation(std::string &str, const size_t &begin) {}
+std::string get_operation(const std::string &str, int &pos) {
+  std::string result;
+  for (size_t i = pos; pos < str.size(); ++i) {
+    if (is_simple_operation(str, i)) {
+      result = str.substr(i, 1);
+      ++pos;
+      return result;
+    }
+    if (is_three(str, i)) {
+      result = str.substr(i - 2, 3);
+      pos += 3;
+      return result;
+    }
+  }
+  return result;
+}
+
+void solve_simple_operation(std::string &str, const int &pos) {
+  int pos_end = pos;
+  double lhs = 0, rhs = 0;
+  if (is_number(str, pos_end) || str[pos_end] == '(' || str[pos_end] == ')')
+    lhs = get_number(str, pos_end);
+  std::string operation = get_operation(str, pos_end);
+  if (is_number(str, pos_end) || str[pos_end] == '(' || str[pos_end] == ')')
+    rhs = get_number(str, pos_end);
+  if (operation == "+") {
+    double result = lhs + rhs;
+    std::string result_str = std::to_string(result);
+    str.replace(pos, pos_end - pos, result_str);
+    return;
+  }
+  if (operation == "-") {
+    double result = lhs - rhs;
+    std::string result_str = std::to_string(result);
+    str.replace(pos, pos_end - pos, result_str);
+    return;
+  }
+  if (operation == "*") {
+    double result = lhs * rhs;
+    std::string result_str = std::to_string(result);
+    str.replace(pos, pos_end - pos, result_str);
+    return;
+  }
+  if (operation == "/") {
+    if (rhs == 0) {
+      std::cout << "divison by zero" << std::endl;
+      return;
+    }
+    double result = lhs / rhs;
+    std::string result_str = std::to_string(result);
+    str.replace(pos, pos_end - pos, result_str);
+    return;
+  }
+  if (operation == "^") {
+    double result = pow(lhs, rhs);
+    std::string result_str = std::to_string(result);
+    str.replace(pos, pos_end - pos, result_str);
+    return;
+  }
+  if (operation == "sin") {
+    double result = sin(rhs);
+    std::string result_str = std::to_string(result);
+    str.replace(pos, pos_end - pos, result_str);
+    return;
+  }
+  if (operation == "cos") {
+    double result = cos(rhs);
+    std::string result_str = std::to_string(result);
+    str.replace(pos, pos_end - pos, result_str);
+    return;
+  }
+
+  if (operation == "tan") {
+    double result = tan(rhs);
+    std::string result_str = std::to_string(result);
+    str.replace(pos, pos_end - pos, result_str);
+    return;
+  }
+
+  if (operation == "cot") {
+    double result = 1 / tan(rhs);
+    std::string result_str = std::to_string(result);
+    str.replace(pos, pos_end - pos, result_str);
+    return;
+  }
+
+  if (operation == "sqr") {
+    double result = sqrt(rhs);
+    std::string result_str = std::to_string(result);
+    str.replace(pos, pos_end - pos, result_str);
+    return;
+  }
+
+  if (operation == "exp") {
+    if (rhs >= 0) {
+      double result = exp(rhs);
+      std::string result_str = std::to_string(result);
+      str.replace(pos, pos_end - pos, result_str);
+    } else {
+      std::cout << "wrong exp arg" << std::endl;
+      return;
+    }
+    return;
+  }
+}
 
 void solve_simple_bracket(std::string &str) {}
 
 int main() {
-  std::string str = "1*12.32+12.45";
-  std::cout << get_number(str, 2);
+  std::string str = "exp(+1)";
+  int i = 0;
+  std::cout << is_normal(str) << std::endl;
+  solve_simple_operation(str, i);
+  std::cout << str;
   return 0;
 }
