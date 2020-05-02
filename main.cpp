@@ -214,7 +214,10 @@ bool is_valid_arg_cot(double value) {
 bool is_unar(const std::string &str, int i) {
   if (i == 0 && str[i] == '-')
     return true;
-  return !is_number(str, i - 1);
+  if (i > 0)
+    return !is_number(str, i - 1);
+  else
+    return false;
 }
 
 int count_operations(const std::string &str, const int &pos) {
@@ -321,23 +324,29 @@ int find_end_trig(const std::string &str, int pos) {
 }
 
 int find_end_num(const std::string &str, int pos) {
-  if (str[pos] == '-')
+  if (str[pos] == '-' && is_unar(str, pos))
     ++pos;
-  for (; !is_simple_operation(str, pos); ++pos)
+  for (;
+       !is_simple_operation(str, pos) || (str[pos] == '-' && is_unar(str, pos));
+       ++pos)
     ;
   ++pos;
-  for (; is_number(str, pos); ++pos)
+  for (; is_number(str, pos) || str[pos] == '(' ||
+         (str[pos] == '-' && is_unar(str, pos));
+       ++pos)
     ;
   return pos;
 }
 
 int find_high_priority(const std::string &str) {
-  int max_level = 0, level = 0, result = 0;
+  int max_level = 0, level = 0, result = -1;
   for (int i = 0; i < str.size(); ++i) {
     if (str[i] == '(') {
       ++level;
-      if (level > max_level && count_operations(str, i) > 0)
+      if (level > max_level && count_operations(str, i) > 0) {
         result = i;
+        max_level = level;
+      }
     }
     if (str[i] == ')')
       --level;
@@ -398,7 +407,8 @@ std::string get_operation(const std::string &str, int &pos) {
   return result;
 }
 
-void solve_simple(std::string &str, const int &pos) {
+void solve_simple(std::string &str, const int &pos_init) {
+  int pos = pos_init;
   int pos_end = pos;
   double lhs = 0, rhs = 0;
   if (is_number(str, pos_end) || str[pos_end] == '(' || str[pos_end] == ')' ||
@@ -408,6 +418,10 @@ void solve_simple(std::string &str, const int &pos) {
   if (is_number(str, pos_end) || str[pos_end] == '(' || str[pos_end] == ')' ||
       (is_unar(str, pos_end) && str[pos_end] == '-'))
     rhs = get_number(str, pos_end);
+  if (pos > 0) {
+    if (is_unar(str, pos - 1) && str[pos - 1] == '-')
+      --pos;
+  }
   if (operation == "*") {
     double result = lhs * rhs;
     std::string result_str = std::to_string(result);
@@ -545,7 +559,8 @@ void solve_simple_bracket(std::string &str, int &pos) {
 void solve(std::string &str) {
   setup_vars(str);
   if (is_normal(str)) {
-    while (int pos = find_high_priority(str)) {
+    for (int pos = find_high_priority(str); pos >= 0;
+         pos = find_high_priority(str)) {
       solve_simple_bracket(str, pos);
     }
     int pos = 0;
@@ -555,7 +570,7 @@ void solve(std::string &str) {
 }
 
 int main() {
-  std::string str = "1-20+1", str_tmp = "-30";
+  std::string str = "2-4-4-4", str_tmp = "-1.00000";
   solve(str);
   std::cout << str;
   return 0;
