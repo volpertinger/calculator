@@ -105,10 +105,19 @@ bool is_correct_bracket(const std::string &str) {
   return tmp == 0;
 }
 
+bool is_unar(const std::string &str, int i) {
+  if (i == 0 && str[i] == '-')
+    return true;
+  if (i > 0)
+    return !is_number(str, i - 1);
+  else
+    return false;
+}
+
 bool is_correct_operations(const std::string &str) {
   size_t size = str.size();
-  if (str[0] == '+' || str[0] == '-' || str[0] == '*' || str[0] == '/' ||
-      str[0] == '^')
+  if (str[0] == '+' || (str[0] == '-' && !is_unar(str, 0)) || str[0] == '*' ||
+      str[0] == '/' || str[0] == '^')
     return false;
   if (str[size - 1] == '+' || str[size - 1] == '-' || str[size - 1] == '*' ||
       str[size - 1] == '/' || str[size - 1] == '^')
@@ -117,10 +126,12 @@ bool is_correct_operations(const std::string &str) {
         (str[size - 1] == ')')))
     return false;
   for (size_t i = 1; i < str.size() - 1; ++i) {
-    if (str[i] == '+' || str[i] == '-') {
+    if (str[i] == '+' || (str[i] == '-' && !is_unar(str, i))) {
       if (!((str[i - 1] == ')' || str[i - 1] == '(' ||
-             (str[i - 1] >= '0' && str[i - 1] <= '9')) &&
-            (str[i + 1] == '(' || (str[i + 1] >= '0' && str[i + 1] <= '9')))) {
+             (str[i - 1] >= '0' && str[i - 1] <= '9') ||
+             (is_unar(str, i - 1) && str[i - 1] == '-')) &&
+            (str[i + 1] == '(' || (str[i + 1] >= '0' && str[i + 1] <= '9') ||
+             (is_unar(str, i + 1) && str[i + 1] == '-')))) {
         if (size - i >= 4) {
           std::string tmp = str.substr(i + 1, 3);
           if (!(tmp == "sin" || tmp == "cos" || tmp == "tan" || tmp == "cot" ||
@@ -131,8 +142,10 @@ bool is_correct_operations(const std::string &str) {
       }
     }
     if (str[i] == '*' || str[i] == '/' || str[i] == '^') {
-      if (!((str[i - 1] == ')' || (str[i - 1] >= '0' && str[i - 1] <= '9')) &&
-            (str[i + 1] == '(' || (str[i + 1] >= '0' && str[i + 1] <= '9')))) {
+      if (!((str[i - 1] == ')' || (is_unar(str, i - 1) && str[i - 1] == '-') ||
+             (str[i - 1] >= '0' && str[i - 1] <= '9')) &&
+            (str[i + 1] == '(' || (is_unar(str, i + 1) && str[i + 1] == '-') ||
+             (str[i + 1] >= '0' && str[i + 1] <= '9')))) {
         if (size - i >= 4) {
           std::string tmp = str.substr(i + 1, 3);
           if (!(tmp == "sin" || tmp == "cos" || tmp == "tan" || tmp == "cot" ||
@@ -164,7 +177,8 @@ bool is_normal(const std::string &str) {
             (str[1] >= '0' && str[1] <= '9'));
   if (size >= 3) {
     for (int i = 0; i < size; ++i) {
-      if (!is_sign_number(str, i) && !(is_three(str, i) && !(is_real(str, i))))
+      if (!is_sign_number(str, i) && !is_three(str, i) && !(is_real(str, i)) &&
+          !(is_unar(str, i) && str[i] == '-'))
         return false;
     }
     return true;
@@ -209,15 +223,6 @@ bool is_valid_arg_cot(double value) {
       ;
     return (value - 3.14159262 > 0.0001 || value - 3.14159262 < -0.0001);
   }
-}
-
-bool is_unar(const std::string &str, int i) {
-  if (i == 0 && str[i] == '-')
-    return true;
-  if (i > 0)
-    return !is_number(str, i - 1);
-  else
-    return false;
 }
 
 int count_operations(const std::string &str, const int &pos) {
@@ -570,7 +575,7 @@ void solve(std::string &str) {
 }
 
 int main() {
-  std::string str = "(2-4)*10", str_tmp = "-1.00000";
+  std::string str = "(cos(0)+4)*4-22+1", str_tmp = "-1.00000";
   solve(str);
   std::cout << str;
   return 0;
