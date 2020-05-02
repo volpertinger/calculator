@@ -181,7 +181,7 @@ bool is_functional_bracket(const std::string &str, int pos) {
 }
 
 bool is_valid_arg_tan(double value) {
-  if (value > 0) {
+  if (value >= 0) {
     for (; value >= 3.14159265; value -= 3.14159265)
       ;
     return (value - 3.14159262 / 2 > 0.0001 ||
@@ -197,10 +197,11 @@ bool is_valid_arg_tan(double value) {
 }
 
 bool is_valid_arg_cot(double value) {
-  if (value > 0) {
-    for (; value >= 3.14159265; value -= 3.14159265)
+  if (value >= 0) {
+    for (; value > 3.14159265; value -= 3.14159265)
       ;
-    return (value - 3.14159262 > 0.0001 || value - 3.14159262 < -0.0001);
+    return (value - 3.14159262 > 0.0001 || value - 3.14159262 < -0.0001) &&
+           (value > 0.0001 || value < -0.0001);
   }
 
   if (value < 0) {
@@ -219,8 +220,8 @@ bool is_unar(const std::string &str, int i) {
 int count_operations(const std::string &str, const int &pos) {
   int result = 0;
   for (size_t i = pos; i < str.size() && str[i] != ')'; ++i) {
-    if (str[i] == '+' || str[i] == '-' || str[i] == '*' || str[i] == '/' ||
-        str[i] == '^')
+    if (str[i] == '+' || (str[i] == '-' && !is_unar(str, i)) || str[i] == '*' ||
+        str[i] == '/' || str[i] == '^')
       ++result;
     else {
       if (str.size() - i >= 3) {
@@ -346,7 +347,13 @@ int find_high_priority(const std::string &str) {
 
 double get_number(const std::string &str, int &pos) {
   std::string result;
-  for (size_t i = pos; i < str.size(); ++i) {
+  if (pos > 0) {
+    if (is_unar(str, pos - 1) && str[pos - 1] == '-') {
+      result = '-';
+      ++pos;
+    }
+  }
+  for (int i = pos; i < str.size(); ++i) {
     if ((is_number(str, i) || str[i] == '(' || str[i] == ')') ||
         ((str[i] == '+' || str[i] == '-') && (!is_number(str, i - 1))))
       result += str[i];
@@ -354,6 +361,8 @@ double get_number(const std::string &str, int &pos) {
       break;
   }
   pos += result.size();
+  if (result[0] == '-')
+    --pos;
   if (result[0] == '(')
     result = result.substr(1, result.size() - 1);
   if (result[result.size() - 1] == ')')
@@ -377,7 +386,7 @@ void delete_brackets(std::string &str, const int &pos_init) {
 std::string get_operation(const std::string &str, int &pos) {
   std::string result;
   for (int i = pos; pos < str.size(); ++i) {
-    if (is_simple_operation(str, i)) {
+    if (is_simple_operation(str, i) && !is_unar(str, i)) {
       result = str.substr(i, 1);
       ++pos;
       return result;
@@ -394,10 +403,12 @@ std::string get_operation(const std::string &str, int &pos) {
 void solve_simple(std::string &str, const int &pos) {
   int pos_end = pos;
   double lhs = 0, rhs = 0;
-  if (is_number(str, pos_end) || str[pos_end] == '(' || str[pos_end] == ')')
+  if (is_number(str, pos_end) || str[pos_end] == '(' || str[pos_end] == ')' ||
+      (is_unar(str, pos_end) && str[pos_end] == '-'))
     lhs = get_number(str, pos_end);
   std::string operation = get_operation(str, pos_end);
-  if (is_number(str, pos_end) || str[pos_end] == '(' || str[pos_end] == ')')
+  if (is_number(str, pos_end) || str[pos_end] == '(' || str[pos_end] == ')' ||
+      (is_unar(str, pos_end) && str[pos_end] == '-'))
     rhs = get_number(str, pos_end);
   if (operation == "*") {
     double result = lhs * rhs;
@@ -407,7 +418,7 @@ void solve_simple(std::string &str, const int &pos) {
     return;
   }
   if (operation == "/") {
-    if (rhs > 0.0001 || rhs < -0.0001) {
+    if (rhs < 0.0001 && rhs > -0.0001) {
       std::cout << "divison by zero" << std::endl;
       return;
     }
@@ -522,7 +533,7 @@ void solve_simple_bracket(std::string &str, int &pos) {
     }
   }
   for (int i = pos; str[i] != ')' && i < str.size(); ++i) {
-    if (str[i] == '+' || str[i] == '-') {
+    if (str[i] == '+' || (str[i] == '-' && !is_unar(str, i))) {
       for (begin = i - 1; is_number(str, begin); --begin)
         ;
       solve_simple(str, begin + 1);
@@ -546,7 +557,7 @@ void solve(std::string &str) {
 }
 
 int main() {
-  std::string str = "(-30+2)";
+  std::string str = "cot(0)", str_tmp = "-30";
   solve(str);
   std::cout << str;
   return 0;
