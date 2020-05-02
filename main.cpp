@@ -454,34 +454,37 @@ void solve_simple(std::string &str, const int &pos) {
 
 void solve_simple_bracket(std::string &str, int &pos) {
   int begin = pos;
-  for (int i = 0; str[i] != ')' && i < str.size(); ++i) {
+  for (int i = pos; str[i] != ')' && i < str.size(); ++i) {
     if (is_three(str, i)) {
       solve_simple(str, i - 3);
-      i = 0;
+      i = pos;
     }
   }
-  for (size_t i = 0; str[i] != ')' && i < str.size(); ++i) {
+  for (int i = pos; str[i] != ')' && i < str.size(); ++i) {
     if (str[i] == '*' || str[i] == '/' || str[i] == '^') {
       for (begin = i - 1; is_number(str, begin); --begin)
         ;
       solve_simple(str, begin + 1);
-      i = 0;
+      i = pos;
     }
   }
-  for (size_t i = 0; str[i] != ')' && i < str.size(); ++i) {
+  for (int i = pos; str[i] != ')' && i < str.size(); ++i) {
     if (str[i] == '+' || str[i] == '-') {
       for (begin = i - 1; is_number(str, begin); --begin)
         ;
       solve_simple(str, begin + 1);
-      i = 0;
+      i = pos;
     }
   }
+  // if(str[pos])
   delete_brackets(str, pos);
 }
 
 int main() {
-  std::string str = "(cos(0)+7*0)*7";
-  int i = 0;
+  std::string str = "1+(1+5-8*0)-10";
+  int i = 2;
+  solve_simple_bracket(str, i);
+  i = 0;
   solve_simple_bracket(str, i);
   std::cout << str;
   return 0;
