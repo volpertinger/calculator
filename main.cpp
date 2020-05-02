@@ -179,7 +179,16 @@ bool is_normal(const std::string &str) {
   }
 }
 
-int count_operations(const std::string &str, const int pos) {
+bool is_functional_bracket(const std::string &str, int pos) {
+  int tmp = pos - 3;
+  if (tmp >= 0) {
+    if (is_three(str, tmp))
+      return true;
+  }
+  return false;
+}
+
+int count_operations(const std::string &str, const int &pos) {
   int result = 0;
   for (size_t i = pos; i < str.size() && str[i] != ')'; ++i) {
     if (str[i] == '+' || str[i] == '-' || str[i] == '*' || str[i] == '/' ||
@@ -476,14 +485,15 @@ void solve_simple_bracket(std::string &str, int &pos) {
       i = pos;
     }
   }
-  // if(str[pos])
-  delete_brackets(str, pos);
+  if (!is_functional_bracket(str, pos))
+    delete_brackets(str, pos);
 }
 
 int main() {
-  std::string str = "1+(1+5-8*0)-10";
-  int i = 2;
+  std::string str = "sin(10+20-30)";
+  int i = 3;
   solve_simple_bracket(str, i);
+  std::cout << str << std::endl;
   i = 0;
   solve_simple_bracket(str, i);
   std::cout << str;
