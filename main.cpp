@@ -570,7 +570,7 @@ void solve(std::string &str) {
 }
 
 int main() {
-  std::string str = "2-4-4-4", str_tmp = "-1.00000";
+  std::string str = "(2-4)*10", str_tmp = "-1.00000";
   solve(str);
   std::cout << str;
   return 0;
