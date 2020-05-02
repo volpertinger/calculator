@@ -1,6 +1,5 @@
 #include <cmath>
 #include <cstddef>
-#include <exception>
 #include <iostream>
 #include <set>
 #include <string>
@@ -435,15 +434,19 @@ void solve_simple(std::string &str, const int &pos_init) {
     return;
   }
   if (operation == "/") {
-    if (rhs < 0.0001 && rhs > -0.0001) {
-      std::cout << "divison by zero" << std::endl;
+    try {
+      if (rhs < 0.0001 && rhs > -0.0001) {
+        throw "divison by zero";
+      }
+      double result = lhs / rhs;
+      std::string result_str = std::to_string(result);
+      pos_end = find_end_num(str, pos);
+      str.replace(pos, pos_end - pos, result_str);
       return;
+    } catch (const char *exception) {
+      std::cerr << "Error: " << exception << '\n';
+      str = "error located";
     }
-    double result = lhs / rhs;
-    std::string result_str = std::to_string(result);
-    pos_end = find_end_num(str, pos);
-    str.replace(pos, pos_end - pos, result_str);
-    return;
   }
   if (operation == "^") {
     double result = pow(lhs, rhs);
@@ -482,52 +485,69 @@ void solve_simple(std::string &str, const int &pos_init) {
   }
 
   if (operation == "tan") {
-    if (is_valid_arg_tan(rhs)) {
-      double result = tan(rhs);
-      std::string result_str = std::to_string(result);
-      pos_end = find_end_trig(str, pos);
-      str.replace(pos, pos_end - pos, result_str);
-      return;
-    } else {
-      std::cout << "sin/0" << std::endl;
-      return;
+    try {
+      if (is_valid_arg_tan(rhs)) {
+        double result = tan(rhs);
+        std::string result_str = std::to_string(result);
+        pos_end = find_end_trig(str, pos);
+        str.replace(pos, pos_end - pos, result_str);
+        return;
+      } else {
+        throw "bad tan arg";
+      }
+    } catch (const char *exception) {
+      std::cerr << "Error: " << exception << '\n';
+      str = "error located";
     }
   }
 
   if (operation == "cot") {
-    if (is_valid_arg_cot(rhs)) {
-      double result = 1 / tan(rhs);
-      std::string result_str = std::to_string(result);
-      pos_end = find_end_trig(str, pos);
-      str.replace(pos, pos_end - pos, result_str);
-      return;
-    } else {
-      std::cout << "cos/0" << std::endl;
-      return;
+    try {
+      if (is_valid_arg_cot(rhs)) {
+        double result = 1 / tan(rhs);
+        std::string result_str = std::to_string(result);
+        pos_end = find_end_trig(str, pos);
+        str.replace(pos, pos_end - pos, result_str);
+        return;
+      } else {
+        throw "bad cot arg";
+      }
+    } catch (const char *exception) {
+      std::cerr << "Error: " << exception << '\n';
+      str = "error located";
     }
   }
 
   if (operation == "sqr") {
-    if (rhs >= 0) {
-      double result = sqrt(rhs);
-      std::string result_str = std::to_string(result);
-      pos_end = find_end_trig(str, pos);
-      str.replace(pos, pos_end - pos, result_str);
-      return;
-    } else {
-      std::cout << "<0 in sqr" << std::endl;
+    try {
+      if (rhs >= 0) {
+        double result = sqrt(rhs);
+        std::string result_str = std::to_string(result);
+        pos_end = find_end_trig(str, pos);
+        str.replace(pos, pos_end - pos, result_str);
+        return;
+      } else {
+        throw "bad sqr arg";
+      }
+    } catch (const char *exception) {
+      std::cerr << "Error: " << exception << '\n';
+      str = "error located";
     }
   }
 
   if (operation == "exp") {
-    if (rhs >= 0) {
-      double result = exp(rhs);
-      std::string result_str = std::to_string(result);
-      pos_end = find_end_trig(str, pos);
-      str.replace(pos, pos_end - pos, result_str);
-    } else {
-      std::cout << "wrong exp arg" << std::endl;
-      return;
+    try {
+      if (rhs >= 0) {
+        double result = exp(rhs);
+        std::string result_str = std::to_string(result);
+        pos_end = find_end_trig(str, pos);
+        str.replace(pos, pos_end - pos, result_str);
+      } else {
+        throw "bad exp arg";
+      }
+    } catch (const char *exception) {
+      std::cerr << "Error: " << exception << '\n';
+      str = "error located";
     }
     return;
   }
@@ -563,19 +583,25 @@ void solve_simple_bracket(std::string &str, int &pos) {
 
 void solve(std::string &str) {
   setup_vars(str);
-  if (is_normal(str)) {
-    for (int pos = find_high_priority(str); pos >= 0;
-         pos = find_high_priority(str)) {
+  try {
+    if (is_normal(str)) {
+      for (int pos = find_high_priority(str); pos >= 0;
+           pos = find_high_priority(str)) {
+        solve_simple_bracket(str, pos);
+      }
+      int pos = 0;
       solve_simple_bracket(str, pos);
+    } else {
+      throw "bad string";
     }
-    int pos = 0;
-    solve_simple_bracket(str, pos);
-  } else
-    std::cout << "bad string" << std::endl;
+  } catch (const char *exception) {
+    std::cerr << "Error: " << exception << '\n';
+    str = "error located";
+  }
 }
 
 int main() {
-  std::string str = "(cos(0)+4)*4-22+1", str_tmp = "-1.00000";
+  std::string str = "exp(-90)", str_tmp = "-1.00000";
   solve(str);
   std::cout << str;
   return 0;
