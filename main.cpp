@@ -300,7 +300,7 @@ int find_end_num(const std::string &str, int pos) {
   return pos;
 }
 
-int find_hight_priority(const std::string &str) {
+int find_high_priority(const std::string &str) {
   int max_level = 0, level = 0, result = 0;
   for (int i = 0; i < str.size(); ++i) {
     if (str[i] == '(') {
@@ -489,13 +489,18 @@ void solve_simple_bracket(std::string &str, int &pos) {
     delete_brackets(str, pos);
 }
 
+void solve(std::string &str) {
+  setup_vars(str);
+  while (int pos = find_high_priority(str)) {
+    solve_simple_bracket(str, pos);
+  }
+  int pos = 0;
+  solve_simple_bracket(str, pos);
+}
+
 int main() {
-  std::string str = "sin(10+20-30)";
-  int i = 3;
-  solve_simple_bracket(str, i);
-  std::cout << str << std::endl;
-  i = 0;
-  solve_simple_bracket(str, i);
+  std::string str = "sin(10+20-30)+cos(0)";
+  solve(str);
   std::cout << str;
   return 0;
 }
