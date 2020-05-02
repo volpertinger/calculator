@@ -63,14 +63,6 @@ bool is_available_name(const std::string &str) {
          str != "sqr" && str != "exp" && str != "e" && str != "p";
 }
 
-bool is_int(const std::string &str) {
-  for (char c : str) {
-    if (c == '.')
-      return false;
-  }
-  return true;
-}
-
 bool is_correct_bracket(const std::string &str) {
   int tmp = 0;
   for (size_t i = 0; i < str.size(); ++i) {
@@ -188,6 +180,42 @@ bool is_functional_bracket(const std::string &str, int pos) {
   return false;
 }
 
+bool is_valid_arg_tan(double value) {
+  if (value > 0) {
+    for (; value >= 3.14159265; value -= 3.14159265)
+      ;
+    return (value - 3.14159262 / 2 > 0.0001 ||
+            value - 3.14159262 / 2 < -0.0001);
+  }
+
+  if (value < 0) {
+    for (; value <= 0; value += 3.14159265)
+      ;
+    return (value - 3.14159262 / 2 > 0.0001 ||
+            value - 3.14159262 / 2 < -0.0001);
+  }
+}
+
+bool is_valid_arg_cot(double value) {
+  if (value > 0) {
+    for (; value >= 3.14159265; value -= 3.14159265)
+      ;
+    return (value - 3.14159262 > 0.0001 || value - 3.14159262 < -0.0001);
+  }
+
+  if (value < 0) {
+    for (; value >= 0; value += 3.14159265)
+      ;
+    return (value - 3.14159262 > 0.0001 || value - 3.14159262 < -0.0001);
+  }
+}
+
+bool is_unar(const std::string &str, int i) {
+  if (i == 0 && str[i] == '-')
+    return true;
+  return !is_number(str, i - 1);
+}
+
 int count_operations(const std::string &str, const int &pos) {
   int result = 0;
   for (size_t i = pos; i < str.size() && str[i] != ')'; ++i) {
@@ -292,6 +320,8 @@ int find_end_trig(const std::string &str, int pos) {
 }
 
 int find_end_num(const std::string &str, int pos) {
+  if (str[pos] == '-')
+    ++pos;
   for (; !is_simple_operation(str, pos); ++pos)
     ;
   ++pos;
@@ -377,7 +407,7 @@ void solve_simple(std::string &str, const int &pos) {
     return;
   }
   if (operation == "/") {
-    if (rhs == 0) {
+    if (rhs > 0.0001 || rhs < -0.0001) {
       std::cout << "divison by zero" << std::endl;
       return;
     }
@@ -424,27 +454,41 @@ void solve_simple(std::string &str, const int &pos) {
   }
 
   if (operation == "tan") {
-    double result = tan(rhs);
-    std::string result_str = std::to_string(result);
-    pos_end = find_end_trig(str, pos);
-    str.replace(pos, pos_end - pos, result_str);
-    return;
+    if (is_valid_arg_tan(rhs)) {
+      double result = tan(rhs);
+      std::string result_str = std::to_string(result);
+      pos_end = find_end_trig(str, pos);
+      str.replace(pos, pos_end - pos, result_str);
+      return;
+    } else {
+      std::cout << "sin/0" << std::endl;
+      return;
+    }
   }
 
   if (operation == "cot") {
-    double result = 1 / tan(rhs);
-    std::string result_str = std::to_string(result);
-    pos_end = find_end_trig(str, pos);
-    str.replace(pos, pos_end - pos, result_str);
-    return;
+    if (is_valid_arg_cot(rhs)) {
+      double result = 1 / tan(rhs);
+      std::string result_str = std::to_string(result);
+      pos_end = find_end_trig(str, pos);
+      str.replace(pos, pos_end - pos, result_str);
+      return;
+    } else {
+      std::cout << "cos/0" << std::endl;
+      return;
+    }
   }
 
   if (operation == "sqr") {
-    double result = sqrt(rhs);
-    std::string result_str = std::to_string(result);
-    pos_end = find_end_trig(str, pos);
-    str.replace(pos, pos_end - pos, result_str);
-    return;
+    if (rhs >= 0) {
+      double result = sqrt(rhs);
+      std::string result_str = std::to_string(result);
+      pos_end = find_end_trig(str, pos);
+      str.replace(pos, pos_end - pos, result_str);
+      return;
+    } else {
+      std::cout << "<0 in sqr" << std::endl;
+    }
   }
 
   if (operation == "exp") {
@@ -491,15 +535,18 @@ void solve_simple_bracket(std::string &str, int &pos) {
 
 void solve(std::string &str) {
   setup_vars(str);
-  while (int pos = find_high_priority(str)) {
+  if (is_normal(str)) {
+    while (int pos = find_high_priority(str)) {
+      solve_simple_bracket(str, pos);
+    }
+    int pos = 0;
     solve_simple_bracket(str, pos);
-  }
-  int pos = 0;
-  solve_simple_bracket(str, pos);
+  } else
+    std::cout << "bad string" << std::endl;
 }
 
 int main() {
-  std::string str = "sin(10+20-30)+cos(0)";
+  std::string str = "(-30+2)";
   solve(str);
   std::cout << str;
   return 0;
