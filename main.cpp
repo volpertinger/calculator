@@ -348,10 +348,8 @@ int find_high_priority(const std::string &str) {
 double get_number(const std::string &str, int &pos) {
   std::string result;
   if (pos > 0) {
-    if (is_unar(str, pos - 1) && str[pos - 1] == '-') {
+    if (is_unar(str, pos - 1) && str[pos - 1] == '-')
       result = '-';
-      ++pos;
-    }
   }
   for (int i = pos; i < str.size(); ++i) {
     if ((is_number(str, i) || str[i] == '(' || str[i] == ')') ||
@@ -557,7 +555,7 @@ void solve(std::string &str) {
 }
 
 int main() {
-  std::string str = "cot(0)", str_tmp = "-30";
+  std::string str = "1-20+1", str_tmp = "-30";
   solve(str);
   std::cout << str;
   return 0;
